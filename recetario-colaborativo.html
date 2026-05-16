@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recetario Manu</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: -apple-system, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif; background:#faf8f5; color:#111; }
+  .page { max-width: 520px; margin: 0 auto; min-height: 100vh; }
+
+  /* Header */
+  .header { background:#1a1a1a; color:#fff; padding: 32px 20px 24px; }
+  .header-top { display:flex; justify-content:space-between; align-items:flex-start; }
+  .header h1 { font-size:26px; font-weight:700; margin-bottom:3px; }
+  .header-sub { color:#888; font-size:13px; }
+  .btn-small { background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#ccc; padding:7px 14px; border-radius:20px; cursor:pointer; font-size:13px; }
+
+  /* Tabs */
+  .tabs { display:flex; border-bottom:1px solid #e8e8e8; background:#fff; }
+  .tab { flex:1; padding:13px; text-align:center; font-size:14px; font-weight:600; color:#999; cursor:pointer; border:none; background:none; border-bottom:2px solid transparent; }
+  .tab.active { color:#111; border-bottom-color:#111; }
+
+  /* Cards */
+  .card { background:#fff; border-radius:12px; margin:12px 16px; box-shadow:0 1px 6px rgba(0,0,0,0.07); overflow:hidden; cursor:pointer; display:flex; transition:transform 0.15s; }
+  .card:hover { transform:translateY(-2px); }
+  .card-bar { width:6px; flex-shrink:0; }
+  .card-body { padding:16px; flex:1; }
+  .card-emoji { font-size:30px; margin-bottom:6px; }
+  .card-cat { font-size:11px; color:#bbb; letter-spacing:2px; text-transform:uppercase; margin-bottom:3px; }
+  .card-title { font-size:16px; font-weight:700; margin-bottom:4px; }
+  .card-desc { font-size:13px; color:#888; line-height:1.5; }
+  .card-meta { display:flex; gap:12px; margin-top:8px; font-size:12px; color:#bbb; }
+
+  /* Botones */
+  .btn-primary { width:100%; padding:14px; border-radius:12px; border:none; background:#111; color:#fff; font-size:15px; font-weight:600; cursor:pointer; }
+  .btn-outline { width:100%; padding:13px; border-radius:12px; border:2px solid #ddd; background:#fff; color:#111; font-size:15px; font-weight:600; cursor:pointer; }
+  .btn-cook { background:#111; color:#fff; border:none; border-radius:20px; padding:10px 20px; font-size:14px; font-weight:600; cursor:pointer; }
+  .btn-back { background:none; border:none; color:#007AFF; font-size:15px; cursor:pointer; padding:16px 20px 8px; display:block; }
+
+  /* Receta */
+  .recipe-header { padding:32px 20px 24px; color:#fff; }
+  .recipe-header h1 { font-size:24px; font-weight:700; margin-bottom:6px; }
+  .recipe-desc { font-size:14px; opacity:0.85; line-height:1.6; margin-bottom:14px; }
+  .recipe-badges { display:flex; gap:10px; }
+  .badge { background:rgba(255,255,255,0.2); padding:4px 12px; border-radius:20px; font-size:13px; }
+  .section-label { font-size:11px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:#999; margin:20px 20px 10px; }
+  .ing-row { display:flex; justify-content:space-between; padding:12px 20px; border-bottom:1px solid #f5f5f5; background:#fff; }
+  .ing-name { font-size:15px; }
+  .ing-amount { font-size:15px; font-weight:700; }
+  .step-card { margin:0 16px 10px; background:#fff; border-radius:10px; padding:16px; box-shadow:0 1px 4px rgba(0,0,0,0.06); display:flex; gap:14px; }
+  .step-num { width:28px; height:28px; border-radius:50%; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; flex-shrink:0; }
+  .step-text { font-size:15px; line-height:1.65; color:#444; }
+  .notes-box { margin:16px; background:#edf7f0; border-left:4px solid #2d6a4f; padding:14px 16px; border-radius:8px; font-size:14px; color:#444; line-height:1.7; }
+  .porciones-row { display:flex; align-items:center; padding:14px 20px; border-bottom:1px solid #f0f0f0; background:#fff; }
+  .porciones-row span { font-size:15px; font-weight:500; }
+  .porc-controls { margin-left:auto; display:flex; align-items:center; gap:14px; }
+  .porc-btn { width:30px; height:30px; border-radius:50%; border:1.5px solid #ddd; background:#fff; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .porc-num { font-size:18px; font-weight:700; min-width:20px; text-align:center; }
+
+  /* Timer */
+  .timer-pill { display:inline-flex; align-items:center; gap:8px; background:#f2f2f2; border-radius:20px; padding:6px 14px; margin-top:10px; border:none; cursor:pointer; font-size:14px; font-weight:500; }
+  .timer-pill.running { background:#fff3cd; }
+  .timer-pill.done { background:#d1fae5; color:#065f46; }
+  .timer-reset { background:none; border:none; color:#aaa; font-size:15px; cursor:pointer; margin-top:10px; margin-left:4px; }
+
+  /* Modo cocina */
+  .cook-page { background:#1a1a1a; min-height:100vh; color:#fff; display:flex; flex-direction:column; }
+  .cook-header { padding:18px 20px; border-bottom:1px solid #333; display:flex; align-items:center; gap:14px; }
+  .cook-back { background:none; border:none; color:#aaa; font-size:22px; cursor:pointer; }
+  .cook-title { font-size:15px; font-weight:700; }
+  .cook-sub { font-size:11px; color:#888; letter-spacing:2px; text-transform:uppercase; }
+  .cook-counter { margin-left:auto; font-size:13px; color:#888; }
+  .progress-bar { display:flex; gap:4px; padding:14px 20px; }
+  .progress-seg { flex:1; height:3px; border-radius:2px; cursor:pointer; transition:background 0.2s; }
+  .cook-body { flex:1; padding:32px 20px; max-width:520px; margin:0 auto; width:100%; }
+  .cook-emoji { font-size:44px; margin-bottom:12px; }
+  .cook-step-label { font-size:12px; letter-spacing:3px; color:#888; text-transform:uppercase; margin-bottom:10px; }
+  .cook-step-text { font-size:19px; line-height:1.7; color:#f0ece6; margin-bottom:24px; }
+  .cook-timer-box { background:#2a2a2a; border-radius:12px; padding:20px 22px; margin-bottom:24px; }
+  .cook-timer-display { font-family:monospace; font-size:44px; font-weight:700; margin-bottom:12px; }
+  .cook-timer-btns { display:flex; gap:10px; }
+  .cook-timer-start { flex:1; padding:12px; border-radius:8px; border:none; font-size:15px; font-weight:700; cursor:pointer; }
+  .cook-timer-reset { padding:12px 16px; border-radius:8px; border:1px solid #444; background:none; color:#aaa; font-size:15px; cursor:pointer; }
+  .cook-nav { display:flex; gap:10px; margin-top:auto; padding-top:24px; }
+  .cook-btn-prev { flex:1; padding:15px; border-radius:10px; border:1px solid #444; background:none; color:#fff; font-size:15px; cursor:pointer; }
+  .cook-btn-next { flex:2; padding:15px; border-radius:10px; border:none; color:#fff; font-size:15px; font-weight:700; cursor:pointer; }
+
+  /* Form agregar receta */
+  .form-wrap { padding:16px; }
+  .form-group { margin-bottom:16px; }
+  .form-label { font-size:12px; font-weight:600; color:#888; letter-spacing:1px; text-transform:uppercase; margin-bottom:6px; display:block; }
+  .form-input { width:100%; padding:12px 14px; border:1.5px solid #e0e0e0; border-radius:10px; font-size:15px; font-family:inherit; background:#fff; }
+  .form-input:focus { outline:none; border-color:#111; }
+  .form-textarea { width:100%; padding:12px 14px; border:1.5px solid #e0e0e0; border-radius:10px; font-size:15px; font-family:inherit; background:#fff; resize:vertical; min-height:80px; }
+  .form-textarea:focus { outline:none; border-color:#111; }
+  .ing-list { display:flex; flex-direction:column; gap:8px; margin-bottom:8px; }
+  .ing-entry { display:flex; gap:8px; align-items:center; }
+  .ing-entry input { flex:1; padding:10px 12px; border:1.5px solid #e0e0e0; border-radius:8px; font-size:14px; font-family:inherit; }
+  .ing-remove { background:none; border:none; color:#ccc; font-size:18px; cursor:pointer; padding:4px; }
+  .btn-add-ing { background:none; border:1.5px dashed #ddd; border-radius:8px; padding:10px; width:100%; font-size:14px; color:#999; cursor:pointer; }
+  .step-list { display:flex; flex-direction:column; gap:8px; margin-bottom:8px; }
+  .step-entry { display:flex; gap:8px; align-items:flex-start; }
+  .step-entry-num { width:26px; height:26px; border-radius:50%; background:#111; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; margin-top:8px; }
+
+  /* Manual */
+  .manual-item { background:#fff; border-radius:12px; padding:18px; margin:10px 16px; box-shadow:0 1px 5px rgba(0,0,0,0.06); display:flex; gap:14px; }
+  .manual-icon { font-size:24px; flex-shrink:0; margin-top:2px; }
+  .manual-title { font-size:15px; font-weight:700; margin-bottom:4px; }
+  .manual-text { font-size:14px; color:#555; line-height:1.65; }
+  .manual-footer { background:#1a1a1a; border-radius:12px; margin:10px 16px 32px; padding:18px 20px; color:#fff; }
+
+  /* Loading / empty */
+  .loading { display:flex; align-items:center; justify-content:center; height:100vh; color:#999; font-size:15px; }
+  .empty { text-align:center; padding:40px 20px; color:#bbb; font-size:14px; }
+  .dashed-box { text-align:center; margin:12px 16px; padding:20px; border-radius:10px; border:2px dashed #ddd; color:#ccc; font-size:13px; }
+  .pdf-btn { margin:0 16px 12px; display:flex; align-items:center; justify-content:center; gap:8px; }
+
+  /* Usuario */
+  .user-row { display:flex; gap:8px; align-items:center; margin-bottom:12px; }
+  .user-avatar { width:32px; height:32px; border-radius:50%; background:#e0e0e0; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:#666; flex-shrink:0; }
+  .user-name { font-size:13px; color:#888; }
+</style>
+</head>
+<body>
+<div class="page" id="app">
+  <div class="loading">Conectando con Firebase...</div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC3DvVxRbRngqAQSzHttyzE09JspyJGb4g",
+  authDomain: "recetario-manu.firebaseapp.com",
+  projectId: "recetario-manu",
+  storageBucket: "recetario-manu.firebasestorage.app",
+  messagingSenderId: "998539412976",
+  appId: "1:998539412976:web:766148d40b4f30dddc4935"
+};
+
+const app2 = initializeApp(firebaseConfig);
+const db = getFirestore(app2);
+
+// ── Estado global ─────────────────────────────────────────
+let state = {
+  view: "biblioteca",   // biblioteca | receta | cocina | agregar | ayuda
+  recipes: [],
+  selected: null,
+  servings: 2,
+  cookStep: 0,
+  timers: {},
+  tab: "todas",         // todas | mias
+  userName: localStorage.getItem("recetario-user") || "",
+  loading: true,
+  formIngredients: [{ name:"", amount:"" }],
+  formSteps: [""],
+};
+
+const STEP_EMOJIS = ["🧂","🥔","🔥","🫙","⏱️","🌡️","⏳","🍽️","🥘","🫕","🍲","🥗"];
+const COLORS = ["#8B2635","#2d6a4f","#1a5276","#784212","#6c3483","#17202a"];
+
+function fmt(s) { return `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`; }
+function initials(name) { return name ? name.split(" ").map(w=>w[0]).join("").toUpperCase().slice(0,2) : "?"; }
+
+// ── Timer tick ────────────────────────────────────────────
+setInterval(() => {
+  let changed = false;
+  Object.keys(state.timers).forEach(k => {
+    if (state.timers[k].running && state.timers[k].remaining > 0) {
+      state.timers[k].remaining--;
+      if (state.timers[k].remaining === 0) state.timers[k].running = false;
+      changed = true;
+    }
+  });
+  if (changed) render();
+}, 1000);
+
+// ── Firebase listener ─────────────────────────────────────
+const q = query(collection(db, "recetas"), orderBy("createdAt", "desc"));
+onSnapshot(q, (snap) => {
+  state.recipes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  state.loading = false;
+  render();
+});
+
+// ── Guardar receta ────────────────────────────────────────
+async function saveReceta(data) {
+  await addDoc(collection(db, "recetas"), { ...data, createdAt: Date.now() });
+}
+
+// ── Export PDF ────────────────────────────────────────────
+function exportPDF() {
+  const recipes = state.tab === "mias" ? state.recipes.filter(r => r.author === state.userName) : state.recipes;
+  const win = window.open("","_blank");
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Recetario</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lato:wght@400;700&display=swap');
+    *{margin:0;padding:0;box-sizing:border-box}body{font-family:'Lato',sans-serif;color:#2c2c2c}
+    .cover{height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#1a1a1a;color:#fff;page-break-after:always}
+    .cover h1{font-family:'Playfair Display',serif;font-size:52px;letter-spacing:2px;margin-bottom:10px}
+    .cover p{color:#aaa;font-size:14px;letter-spacing:4px;text-transform:uppercase}
+    .recipe{max-width:580px;margin:0 auto;padding:60px 40px;page-break-after:always}
+    .rt{font-family:'Playfair Display',serif;font-size:32px;margin-bottom:4px}
+    .rm{color:#888;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+    .ra{color:#aaa;font-size:12px;margin-bottom:28px}
+    .sl{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#8B2635;margin:24px 0 12px;font-weight:600}
+    .ing{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0ece6;font-size:15px}
+    .ia{font-weight:700;color:#8B2635}
+    .step{display:flex;gap:14px;margin-bottom:16px}
+    .sn{width:26px;height:26px;border-radius:50%;background:#1a1a1a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:2px}
+    .st{font-size:15px;line-height:1.65;color:#444}
+    .notes{background:#faf5f0;border-left:4px solid #8B2635;padding:14px 18px;border-radius:4px;margin-top:20px;font-size:13px;color:#555;line-height:1.7}
+  </style></head><body>
+  <div class="cover"><h1>Recetario</h1><p>${new Date().getFullYear()}</p></div>
+  ${recipes.map(r=>`<div class="recipe">
+    <h2 class="rt">${r.title}</h2>
+    <div class="rm">${r.category} · ${r.servings} porciones · ${r.time}</div>
+    <div class="ra">por ${r.author||"Anónimo"}</div>
+    <div class="sl">Ingredientes</div>
+    ${r.ingredients.map(i=>`<div class="ing"><span>${i.name}</span><span class="ia">${i.amount}</span></div>`).join("")}
+    <div class="sl">Preparación</div>
+    ${r.steps.map((s,i)=>`<div class="step"><div class="sn">${i+1}</div><div class="st">${s.text||s}</div></div>`).join("")}
+    ${r.notes?`<div class="notes">💡 ${r.notes}</div>`:""}
+  </div>`).join("")}
+  </body></html>`);
+  win.document.close();
+  setTimeout(()=>win.print(),500);
+}
+
+// ── Render ────────────────────────────────────────────────
+function render() {
+  const el = document.getElementById("app");
+  if (state.loading) { el.innerHTML = `<div class="loading">Conectando con Firebase...</div>`; return; }
+
+  if (!state.userName && state.view !== "ayuda") { el.innerHTML = renderNombre(); bindNombre(); return; }
+
+  switch(state.view) {
+    case "cocina":    el.innerHTML = renderCocina();    bindCocina();    break;
+    case "receta":    el.innerHTML = renderReceta();    bindReceta();    break;
+    case "agregar":   el.innerHTML = renderAgregar();   bindAgregar();   break;
+    case "ayuda":     el.innerHTML = renderAyuda();     bindAyuda();     break;
+    default:          el.innerHTML = renderBiblioteca(); bindBiblioteca(); break;
+  }
+}
+
+// ── Pantalla nombre ───────────────────────────────────────
+function renderNombre() {
+  return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:32px;text-align:center">
+    <div style="font-size:52px;margin-bottom:16px">📖</div>
+    <h1 style="font-size:24px;font-weight:700;margin-bottom:8px">Recetario Colaborativo</h1>
+    <p style="color:#888;font-size:14px;margin-bottom:32px;line-height:1.6">Antes de entrar, ¿cómo te llamás?<br>Así sabemos quién agregó cada receta.</p>
+    <input id="inp-nombre" class="form-input" style="max-width:300px;margin-bottom:16px;text-align:center" placeholder="Tu nombre" value="">
+    <button id="btn-nombre" class="btn-primary" style="max-width:300px">Entrar al recetario</button>
+  </div>`;
+}
+function bindNombre() {
+  document.getElementById("btn-nombre").onclick = () => {
+    const val = document.getElementById("inp-nombre").value.trim();
+    if (!val) return;
+    state.userName = val;
+    localStorage.setItem("recetario-user", val);
+    render();
+  };
+  document.getElementById("inp-nombre").onkeydown = (e) => { if(e.key==="Enter") document.getElementById("btn-nombre").click(); };
+}
+
+// ── Biblioteca ────────────────────────────────────────────
+function renderBiblioteca() {
+  const filtered = state.tab === "mias" ? state.recipes.filter(r=>r.author===state.userName) : state.recipes;
+  return `
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div style="font-size:11px;letter-spacing:3px;color:#888;text-transform:uppercase;margin-bottom:4px">Recetario colaborativo</div>
+        <h1>Mis Recetas</h1>
+        <div class="header-sub">${state.recipes.length} receta${state.recipes.length!==1?"s":""} · Hola, ${state.userName} 👋</div>
+      </div>
+      <button class="btn-small" id="btn-ayuda">? Ayuda</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab ${state.tab==="todas"?"active":""}" id="tab-todas">Todas</button>
+    <button class="tab ${state.tab==="mias"?"active":""}" id="tab-mias">Mis recetas</button>
+  </div>
+  <div style="padding:12px 16px 0">
+    <button class="btn-outline pdf-btn" id="btn-pdf">📄 Exportar como PDF</button>
+  </div>
+  ${filtered.length===0 ? `<div class="empty">No hay recetas todavía.<br>¡Agregá la primera!</div>` :
+    filtered.map((r,i)=>`
+    <div class="card" data-idx="${i}" data-id="${r.id}">
+      <div class="card-bar" style="background:${r.color||COLORS[0]}"></div>
+      <div class="card-body">
+        <div class="card-emoji">${r.emoji||"🍽️"}</div>
+        <div class="card-cat">${r.category||""}</div>
+        <div class="card-title">${r.title}</div>
+        <div class="card-desc">${r.description||""}</div>
+        <div class="card-meta">
+          <span>👥 ${r.servings} porciones</span>
+          <span>⏱ ${r.time}</span>
+          <span>👤 ${r.author||"Anónimo"}</span>
+        </div>
+      </div>
+    </div>`).join("")
+  }
+  <div class="dashed-box">✦ Las recetas de todos aparecen acá automáticamente</div>
+  <div style="height:90px"></div>
+  <!-- FAB agregar -->
+  <button id="btn-agregar" style="position:fixed;bottom:24px;right:50%;transform:translateX(calc(50% - 0px));max-width:calc(520px - 32px);width:calc(100% - 32px);padding:15px;border-radius:14px;border:none;background:#111;color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.2)">
+    + Agregar receta
+  </button>`;
+}
+function bindBiblioteca() {
+  document.getElementById("btn-ayuda").onclick = ()=>{state.view="ayuda";render();};
+  document.getElementById("tab-todas").onclick = ()=>{state.tab="todas";render();};
+  document.getElementById("tab-mias").onclick = ()=>{state.tab="mias";render();};
+  document.getElementById("btn-pdf").onclick = exportPDF;
+  document.getElementById("btn-agregar").onclick = ()=>{state.view="agregar";render();};
+  document.querySelectorAll(".card").forEach(card=>{
+    card.onclick = ()=>{
+      const id = card.dataset.id;
+      state.selected = state.recipes.find(r=>r.id===id);
+      state.servings = state.selected.servings;
+      state.view = "receta";
+      render();
+    };
+  });
+}
+
+// ── Vista receta ──────────────────────────────────────────
+function renderReceta() {
+  const r = state.selected;
+  const ratio = state.servings / (r.servings||2);
+  const color = r.color||COLORS[0];
+  return `
+  <div class="recipe-header" style="background:${color}">
+    <button class="btn-back" style="color:rgba(255,255,255,0.8);padding:0 0 16px" id="btn-back">← Volver</button>
+    <div style="font-size:44px;margin-bottom:10px">${r.emoji||"🍽️"}</div>
+    <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;opacity:0.7;margin-bottom:4px">${r.category}</div>
+    <h1>${r.title}</h1>
+    <p class="recipe-desc">${r.description||""}</p>
+    <div class="user-row">
+      <div class="user-avatar" style="background:rgba(255,255,255,0.2);color:#fff">${initials(r.author)}</div>
+      <span class="user-name" style="color:rgba(255,255,255,0.7)">por ${r.author||"Anónimo"}</span>
+    </div>
+    <div class="recipe-badges">
+      <span class="badge">👥 ${state.servings} porciones</span>
+      <span class="badge">⏱ ${r.time}</span>
+    </div>
+  </div>
+  <div class="porciones-row">
+    <span>Porciones</span>
+    <div class="porc-controls">
+      <button class="porc-btn" id="porc-menos">−</button>
+      <span class="porc-num">${state.servings}</span>
+      <button class="porc-btn" id="porc-mas">+</button>
+    </div>
+  </div>
+  <div style="padding:14px 20px 4px">
+    <button class="btn-cook" id="btn-cook">👨‍🍳 Modo Cocina</button>
+  </div>
+  <div class="section-label">Ingredientes</div>
+  ${r.ingredients.map(ing=>{
+    const base = parseFloat(ing.amount);
+    const scaled = !isNaN(base) ? `${Math.round(base*ratio*10)/10} ${ing.amount.replace(/[\d.]+\s*/,"")}` : ing.amount;
+    return `<div class="ing-row"><span class="ing-name">${ing.name}</span><span class="ing-amount" style="color:${color}">${scaled}</span></div>`;
+  }).join("")}
+  <div class="section-label">Pasos</div>
+  ${r.steps.map((step,i)=>{
+    const tk = `receta-${r.id}-${i}`;
+    const t = state.timers[tk];
+    const stepTime = step.timer||null;
+    const remaining = t ? t.remaining : stepTime;
+    const running = t?.running||false;
+    const done = remaining===0 && t;
+    const timerHTML = stepTime ? `
+      <div style="display:flex;align-items:center;gap:6px">
+        <button class="timer-pill ${done?"done":running?"running":""}" data-tk="${tk}" data-secs="${stepTime}" data-action="toggle">
+          ${done?"✓ Listo": (running?"⏸ ":"▷ ") + fmt(remaining||stepTime)}
+        </button>
+        ${t&&!done?`<button class="timer-reset" data-tk="${tk}" data-secs="${stepTime}" data-action="reset">↺</button>`:""}
+      </div>` : "";
+    return `<div class="step-card">
+      <div class="step-num" style="background:${color}">${i+1}</div>
+      <div style="flex:1"><div class="step-text">${step.text||step}</div>${timerHTML}</div>
+    </div>`;
+  }).join("")}
+  ${r.notes?`<div class="notes-box">💡 ${r.notes}</div>`:""}
+  <div style="height:40px"></div>`;
+}
+function bindReceta() {
+  document.getElementById("btn-back").onclick=()=>{state.view="biblioteca";render();};
+  document.getElementById("btn-cook").onclick=()=>{state.cookStep=0;state.view="cocina";render();};
+  document.getElementById("porc-menos").onclick=()=>{state.servings=Math.max(1,state.servings-1);render();};
+  document.getElementById("porc-mas").onclick=()=>{state.servings++;render();};
+  document.querySelectorAll(".timer-pill,.timer-reset").forEach(btn=>{
+    btn.onclick=()=>{
+      const tk=btn.dataset.tk, secs=parseInt(btn.dataset.secs), action=btn.dataset.action;
+      if(action==="toggle") state.timers[tk]=state.timers[tk]?{...state.timers[tk],running:!state.timers[tk].running}:{remaining:secs,running:true};
+      if(action==="reset") state.timers[tk]={remaining:secs,running:false};
+      render();
+    };
+  });
+}
+
+// ── Modo cocina ───────────────────────────────────────────
+function renderCocina() {
+  const r = state.selected;
+  const i = state.cookStep;
+  const step = r.steps[i];
+  const color = r.color||COLORS[0];
+  const tk = `cocina-${r.id}-${i}`;
+  const stepTime = step.timer||null;
+  const t = state.timers[tk];
+  const remaining = t ? t.remaining : stepTime;
+  const running = t?.running||false;
+  const done = remaining===0 && t;
+  const emoji = STEP_EMOJIS[i % STEP_EMOJIS.length];
+
+  return `<div class="cook-page">
+    <div class="cook-header">
+      <button class="cook-back" id="btn-cook-back">←</button>
+      <div>
+        <div class="cook-sub">Modo cocina</div>
+        <div class="cook-title">${r.title}</div>
+      </div>
+      <div class="cook-counter">Paso ${i+1} / ${r.steps.length}</div>
+    </div>
+    <div class="progress-bar">
+      ${r.steps.map((_,j)=>`<div class="progress-seg" style="background:${j<=i?color:"#333"}" data-step="${j}"></div>`).join("")}
+    </div>
+    <div class="cook-body">
+      <div class="cook-emoji">${emoji}</div>
+      <div class="cook-step-label">Paso ${i+1}</div>
+      <div class="cook-step-text">${step.text||step}</div>
+      ${stepTime ? `<div class="cook-timer-box">
+        <div class="cook-timer-display" style="color:${done?"#4ade80":"#fff"}">${done?"✓ Listo":fmt(remaining||stepTime)}</div>
+        <div class="cook-timer-btns">
+          <button class="cook-timer-start" id="btn-timer-toggle" style="background:${running?"#dc3545":"#2d6a4f"};color:#fff">${running?"Pausar":"Iniciar"}</button>
+          <button class="cook-timer-reset" id="btn-timer-reset">↺</button>
+        </div>
+      </div>` : ""}
+      <div class="cook-nav">
+        ${i>0?`<button class="cook-btn-prev" id="btn-prev">← Anterior</button>`:""}
+        ${i<r.steps.length-1
+          ?`<button class="cook-btn-next" id="btn-next" style="background:${color}">Siguiente →</button>`
+          :`<button class="cook-btn-next" id="btn-done" style="background:#2d6a4f">✓ ¡Terminado!</button>`}
+      </div>
+    </div>
+  </div>`;
+}
+function bindCocina() {
+  const r = state.selected;
+  const i = state.cookStep;
+  const tk = `cocina-${r.id}-${i}`;
+  const stepTime = r.steps[i].timer||null;
+  document.getElementById("btn-cook-back").onclick=()=>{state.view="receta";render();};
+  document.querySelectorAll(".progress-seg").forEach(s=>{ s.onclick=()=>{state.cookStep=parseInt(s.dataset.step);render();}; });
+  if(stepTime){
+    document.getElementById("btn-timer-toggle").onclick=()=>{ state.timers[tk]=state.timers[tk]?{...state.timers[tk],running:!state.timers[tk].running}:{remaining:stepTime,running:true}; render(); };
+    document.getElementById("btn-timer-reset").onclick=()=>{ state.timers[tk]={remaining:stepTime,running:false}; render(); };
+  }
+  const prev=document.getElementById("btn-prev"), next=document.getElementById("btn-next"), done=document.getElementById("btn-done");
+  if(prev) prev.onclick=()=>{state.cookStep--;render();};
+  if(next) next.onclick=()=>{state.cookStep++;render();};
+  if(done) done.onclick=()=>{state.view="receta";state.cookStep=0;render();};
+}
+
+// ── Agregar receta ────────────────────────────────────────
+function renderAgregar() {
+  const ings = state.formIngredients;
+  const steps = state.formSteps;
+  return `
+  <div class="header">
+    <button class="btn-small" id="btn-cancel">← Cancelar</button>
+    <h1 style="margin-top:12px">Nueva receta</h1>
+    <div class="header-sub">por ${state.userName}</div>
+  </div>
+  <div class="form-wrap">
+    <div class="form-group">
+      <label class="form-label">Nombre de la receta *</label>
+      <input class="form-input" id="f-title" placeholder="Ej: Milanesas a la napolitana" value="${state.formTitle||""}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Categoría</label>
+      <input class="form-input" id="f-category" placeholder="Carnes, Pastas, Postres..." value="${state.formCategory||""}">
+    </div>
+    <div class="form-group" style="display:flex;gap:12px">
+      <div style="flex:1">
+        <label class="form-label">Porciones</label>
+        <input class="form-input" id="f-servings" type="number" min="1" value="${state.formServings||2}">
+      </div>
+      <div style="flex:1">
+        <label class="form-label">Tiempo total</label>
+        <input class="form-input" id="f-time" placeholder="1h 30min" value="${state.formTime||""}">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Descripción breve</label>
+      <textarea class="form-textarea" id="f-desc" placeholder="Una línea que resuma la receta...">${state.formDesc||""}</textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Emoji 🍽️</label>
+      <input class="form-input" id="f-emoji" placeholder="🥩" value="${state.formEmoji||""}" style="font-size:24px;text-align:center;max-width:80px">
+    </div>
+
+    <label class="form-label" style="margin-bottom:8px">Ingredientes *</label>
+    <div class="ing-list" id="ing-list">
+      ${ings.map((ing,i)=>`
+        <div class="ing-entry">
+          <input placeholder="Ingrediente" value="${ing.name}" data-ing="${i}" data-field="name" style="flex:2;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:inherit">
+          <input placeholder="Cantidad" value="${ing.amount}" data-ing="${i}" data-field="amount" style="flex:1;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:inherit">
+          <button class="ing-remove" data-remove-ing="${i}">×</button>
+        </div>`).join("")}
+    </div>
+    <button class="btn-add-ing" id="btn-add-ing" style="margin-bottom:20px">+ Agregar ingrediente</button>
+
+    <label class="form-label" style="margin-bottom:8px">Pasos *</label>
+    <div class="step-list" id="step-list">
+      ${steps.map((step,i)=>`
+        <div class="step-entry">
+          <div class="step-entry-num">${i+1}</div>
+          <textarea data-step="${i}" style="flex:1;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:inherit;resize:vertical;min-height:70px">${step}</textarea>
+          <button class="ing-remove" data-remove-step="${i}">×</button>
+        </div>`).join("")}
+    </div>
+    <button class="btn-add-ing" id="btn-add-step" style="margin-bottom:20px">+ Agregar paso</button>
+
+    <div class="form-group">
+      <label class="form-label">Notas o tips (opcional)</label>
+      <textarea class="form-textarea" id="f-notes" placeholder="Consejos, variantes, sustituciones...">${state.formNotes||""}</textarea>
+    </div>
+
+    <button class="btn-primary" id="btn-save" style="margin-bottom:32px">Guardar receta</button>
+  </div>`;
+}
+function bindAgregar() {
+  document.getElementById("btn-cancel").onclick=()=>{state.view="biblioteca";resetForm();render();};
+
+  // Ingredientes
+  document.querySelectorAll("[data-ing]").forEach(inp=>{
+    inp.oninput=()=>{ state.formIngredients[inp.dataset.ing][inp.dataset.field]=inp.value; };
+  });
+  document.querySelectorAll("[data-remove-ing]").forEach(btn=>{
+    btn.onclick=()=>{ state.formIngredients.splice(parseInt(btn.dataset.removeIng),1); if(!state.formIngredients.length) state.formIngredients=[{name:"",amount:""}]; render(); };
+  });
+  document.getElementById("btn-add-ing").onclick=()=>{ state.formIngredients.push({name:"",amount:""}); render(); };
+
+  // Pasos
+  document.querySelectorAll("[data-step]").forEach(ta=>{
+    ta.oninput=()=>{ state.formSteps[ta.dataset.step]=ta.value; };
+  });
+  document.querySelectorAll("[data-remove-step]").forEach(btn=>{
+    btn.onclick=()=>{ state.formSteps.splice(parseInt(btn.dataset.removeStep),1); if(!state.formSteps.length) state.formSteps=[""]; render(); };
+  });
+  document.getElementById("btn-add-step").onclick=()=>{ state.formSteps.push(""); render(); };
+
+  // Guardar campos simples al salir del foco
+  ["title","category","servings","time","desc","emoji","notes"].forEach(f=>{
+    const el = document.getElementById(`f-${f}`);
+    if(el) el.oninput=()=>{ state[`form${f.charAt(0).toUpperCase()+f.slice(1)}`]=el.value; };
+  });
+
+  document.getElementById("btn-save").onclick = async ()=>{
+    const title = document.getElementById("f-title").value.trim();
+    const steps = state.formSteps.filter(s=>s.trim());
+    const ings = state.formIngredients.filter(i=>i.name.trim());
+    if(!title||!steps.length||!ings.length){ alert("Completá al menos el nombre, ingredientes y pasos."); return; }
+
+    const colorIdx = state.recipes.length % COLORS.length;
+    await saveReceta({
+      title,
+      category: document.getElementById("f-category").value.trim()||"General",
+      servings: parseInt(document.getElementById("f-servings").value)||2,
+      time: document.getElementById("f-time").value.trim()||"—",
+      description: document.getElementById("f-desc").value.trim(),
+      emoji: document.getElementById("f-emoji").value.trim()||"🍽️",
+      notes: document.getElementById("f-notes").value.trim(),
+      ingredients: ings,
+      steps: steps.map(s=>({text:s})),
+      author: state.userName,
+      color: COLORS[colorIdx],
+    });
+    resetForm();
+    state.view="biblioteca";
+    render();
+  };
+}
+function resetForm() {
+  state.formIngredients=[{name:"",amount:""}];
+  state.formSteps=[""];
+  state.formTitle=state.formCategory=state.formTime=state.formDesc=state.formEmoji=state.formNotes="";
+  state.formServings=2;
+}
+
+// ── Ayuda ─────────────────────────────────────────────────
+const MANUAL = [
+  {icon:"📖",titulo:"¿Qué es este recetario?",texto:"Una app colaborativa donde vos y tus amigos pueden agregar recetas, verlas y cocinar juntos. Cada receta queda guardada en la nube para que todos la vean."},
+  {icon:"➕",titulo:"Agregar una receta",texto:"Tocá el botón '+ Agregar receta' en la pantalla principal. Completá el nombre, ingredientes y pasos. La receta queda disponible para todos al instante."},
+  {icon:"🍽️",titulo:"Ver una receta",texto:"Tocá cualquier tarjeta para ver los ingredientes y pasos. Podés ajustar las porciones y las cantidades se calculan automáticamente."},
+  {icon:"👨‍🍳",titulo:"Modo Cocina",texto:"Dentro de cada receta, tocá 'Modo Cocina'. Un paso por vez en pantalla completa, con timers para cada etapa. Ideal para tener el celu apoyado en la mesada."},
+  {icon:"📄",titulo:"Exportar a PDF",texto:"Tocá 'Exportar como PDF' para generar el libro completo con todas las recetas, listo para imprimir o compartir por WhatsApp o mail."},
+  {icon:"👥",titulo:"¿Cómo lo uso con amigos?",texto:"Compartiles el link de esta página. Cada uno entra, pone su nombre, y puede ver y agregar recetas. Todo se sincroniza en tiempo real."},
+  {icon:"🇦🇷",titulo:"Sistema de medidas",texto:"Todas las recetas usan sistema métrico: gramos (g), kilogramos (kg), mililitros (ml). Sin cups ni oz."},
+];
+function renderAyuda() {
+  return `
+  <div class="header">
+    <button class="btn-small" id="btn-ayuda-back">← Volver</button>
+    <h1 style="margin-top:12px">Cómo usar el recetario</h1>
+    <div class="header-sub">Todo lo que necesitás saber.</div>
+  </div>
+  ${MANUAL.map(s=>`<div class="manual-item"><div class="manual-icon">${s.icon}</div><div><div class="manual-title">${s.titulo}</div><div class="manual-text">${s.texto}</div></div></div>`).join("")}
+  <div class="manual-footer">
+    <div style="font-size:11px;color:#888;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Creado por</div>
+    <div style="font-weight:700;font-size:15px;margin-bottom:4px">Manu · manu348@gmail.com</div>
+    <div style="font-size:13px;color:#888;line-height:1.6">Desarrollado con Claude (Anthropic). La sugerencia de sistema métrico en el widget de recetas fue iniciativa de este usuario.</div>
+  </div>`;
+}
+function bindAyuda() {
+  document.getElementById("btn-ayuda-back").onclick=()=>{state.view=state.userName?"biblioteca":"biblioteca";render();};
+}
+
+render();
+</script>
+</body>
+</html>
