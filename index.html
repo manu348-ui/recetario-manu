@@ -284,6 +284,7 @@ function render() {
     case "cocina":    el.innerHTML = renderCocina();    bindCocina();    break;
     case "receta":    el.innerHTML = renderReceta();    bindReceta();    break;
     case "agregar":   el.innerHTML = renderAgregar();   bindAgregar();   break;
+    case "importar":  el.innerHTML = renderImportar();  bindImportar();  break;
     case "ayuda":     el.innerHTML = renderAyuda();     bindAyuda();     break;
     default:          el.innerHTML = renderBiblioteca(); bindBiblioteca(); break;
   }
@@ -327,8 +328,9 @@ function renderBiblioteca() {
     <button class="tab ${state.tab==="todas"?"active":""}" id="tab-todas">Todas</button>
     <button class="tab ${state.tab==="mias"?"active":""}" id="tab-mias">Mis recetas</button>
   </div>
-  <div style="padding:12px 16px 0">
-    <button class="btn-outline pdf-btn" id="btn-pdf">📄 Exportar como PDF</button>
+  <div style="padding:12px 16px 0;display:flex;gap:10px">
+    <button class="btn-outline pdf-btn" id="btn-pdf" style="margin:0;flex:1">📄 Exportar PDF</button>
+    <button class="btn-outline pdf-btn" id="btn-import" style="margin:0;flex:1">📥 Importar receta</button>
   </div>
   ${filtered.length===0 ? `<div class="empty">No hay recetas todavía.<br>¡Agregá la primera!</div>` :
     filtered.map((r,i)=>`
@@ -360,6 +362,7 @@ function bindBiblioteca() {
   document.getElementById("tab-todas").onclick = ()=>{state.tab="todas";render();};
   document.getElementById("tab-mias").onclick = ()=>{state.tab="mias";render();};
   document.getElementById("btn-pdf").onclick = exportPDF;
+  document.getElementById("btn-import").onclick = ()=>{state.view="importar";render();};
   document.getElementById("btn-agregar").onclick = ()=>{state.view="agregar";render();};
   document.querySelectorAll(".card").forEach(card=>{
     card.onclick = ()=>{
@@ -636,6 +639,72 @@ function resetForm() {
   state.formSteps=[""];
   state.formTitle=state.formCategory=state.formTime=state.formDesc=state.formEmoji=state.formNotes="";
   state.formServings=2;
+}
+
+// ── Importar receta (JSON) ────────────────────────────────
+function renderImportar() {
+  return `
+  <div class="header">
+    <button class="btn-small" id="btn-imp-cancel">← Cancelar</button>
+    <h1 style="margin-top:12px">Importar receta</h1>
+    <div class="header-sub">Pegá el código que te dio Claude</div>
+  </div>
+  <div class="form-wrap">
+    <div style="background:#fff;border-radius:10px;padding:16px;margin-bottom:16px;font-size:13px;color:#666;line-height:1.6">
+      Pedile a Claude "crear receta de [lo que sea]" y te va a dar un código.
+      Copialo entero y pegalo acá abajo, después tocá <strong>Importar</strong>.
+    </div>
+    <div class="form-group">
+      <label class="form-label">Código de la receta (JSON)</label>
+      <textarea class="form-textarea" id="imp-json" style="min-height:240px;font-family:monospace;font-size:13px" placeholder='{ "title": "...", "ingredients": [...], "steps": [...] }'></textarea>
+    </div>
+    <div id="imp-error" style="display:none;background:#fde8e8;color:#c0392b;padding:12px 14px;border-radius:8px;font-size:13px;margin-bottom:16px"></div>
+    <button class="btn-primary" id="btn-imp-save" style="margin-bottom:32px">📥 Importar al recetario</button>
+  </div>`;
+}
+function bindImportar() {
+  document.getElementById("btn-imp-cancel").onclick = ()=>{state.view="biblioteca";render();};
+  document.getElementById("btn-imp-save").onclick = async ()=>{
+    const raw = document.getElementById("imp-json").value.trim();
+    const errBox = document.getElementById("imp-error");
+    const showErr = (msg)=>{ errBox.textContent = msg; errBox.style.display="block"; };
+
+    if(!raw){ showErr("Pegá el código de la receta primero."); return; }
+
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch(e) {
+      showErr("El código no es válido. Asegurate de copiarlo completo, desde la primera { hasta la última }."); 
+      return;
+    }
+
+    if(!data.title || !Array.isArray(data.ingredients) || !Array.isArray(data.steps)) {
+      showErr("Al código le faltan datos (título, ingredientes o pasos). Pedile a Claude que lo genere de nuevo.");
+      return;
+    }
+
+    try {
+      const colorIdx = state.recipes.length % COLORS.length;
+      await saveReceta({
+        title: data.title,
+        category: data.category || "General",
+        servings: data.servings || 2,
+        time: data.time || "—",
+        description: data.description || "",
+        emoji: data.emoji || "🍽️",
+        notes: data.notes || "",
+        ingredients: data.ingredients,
+        steps: data.steps.map(s => typeof s === "string" ? {text:s} : s),
+        author: state.userName,
+        color: data.color || COLORS[colorIdx],
+      });
+      state.view = "biblioteca";
+      render();
+    } catch(e) {
+      showErr("Error al guardar: " + e.message);
+    }
+  };
 }
 
 // ── Ayuda ─────────────────────────────────────────────────
