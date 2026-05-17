@@ -6,8 +6,24 @@
 <title>Recetario Manu</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family: -apple-system, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif; background:#faf8f5; color:#111; }
-  .page { max-width: 520px; margin: 0 auto; min-height: 100vh; }
+  html, body { width:100%; overflow-x:hidden; }
+  body { font-family: -apple-system, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif; background:#faf8f5; color:#111; -webkit-text-size-adjust:100%; }
+  .page { width:100%; max-width: 760px; margin: 0 auto; min-height: 100vh; background:#faf8f5; }
+
+  /* En pantallas grandes, el contenedor crece y centra el contenido */
+  @media (min-width: 1024px) {
+    .page { max-width: 960px; box-shadow:0 0 40px rgba(0,0,0,0.05); }
+  }
+
+  /* Grilla de tarjetas: 1 columna en móvil, 2 en tablet, 3 en desktop */
+  .cards-grid { display:grid; grid-template-columns:1fr; gap:12px; padding:0 16px; }
+  @media (min-width: 600px) {
+    .cards-grid { grid-template-columns:repeat(2, 1fr); }
+  }
+  @media (min-width: 1024px) {
+    .cards-grid { grid-template-columns:repeat(3, 1fr); }
+  }
+  .card { margin:0 !important; height:100%; }
 
   /* Header */
   .header { background:#1a1a1a; color:#fff; padding: 32px 20px 24px; }
@@ -73,7 +89,7 @@
   .cook-counter { margin-left:auto; font-size:13px; color:#888; }
   .progress-bar { display:flex; gap:4px; padding:14px 20px; }
   .progress-seg { flex:1; height:3px; border-radius:2px; cursor:pointer; transition:background 0.2s; }
-  .cook-body { flex:1; padding:32px 20px; max-width:520px; margin:0 auto; width:100%; }
+  .cook-body { flex:1; padding:32px 20px; max-width:640px; margin:0 auto; width:100%; }
   .cook-emoji { font-size:44px; margin-bottom:12px; }
   .cook-step-label { font-size:12px; letter-spacing:3px; color:#888; text-transform:uppercase; margin-bottom:10px; }
   .cook-step-text { font-size:19px; line-height:1.7; color:#f0ece6; margin-bottom:24px; }
@@ -333,7 +349,7 @@ function renderBiblioteca() {
     <button class="btn-outline pdf-btn" id="btn-import" style="margin:0;flex:1">📥 Importar receta</button>
   </div>
   ${filtered.length===0 ? `<div class="empty">No hay recetas todavía.<br>¡Agregá la primera!</div>` :
-    filtered.map((r,i)=>`
+    `<div class="cards-grid">` + filtered.map((r,i)=>`
     <div class="card" data-idx="${i}" data-id="${r.id}">
       <div class="card-bar" style="background:${r.color||COLORS[0]}"></div>
       <div class="card-body">
@@ -347,12 +363,12 @@ function renderBiblioteca() {
           <span>👤 ${r.author||"Anónimo"}</span>
         </div>
       </div>
-    </div>`).join("")
+    </div>`).join("") + `</div>`
   }
   <div class="dashed-box">✦ Las recetas de todos aparecen acá automáticamente</div>
   <div style="height:90px"></div>
   <!-- FAB agregar -->
-  <button id="btn-agregar" style="position:fixed;bottom:24px;right:50%;transform:translateX(calc(50% - 0px));max-width:calc(520px - 32px);width:calc(100% - 32px);padding:15px;border-radius:14px;border:none;background:#111;color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.2)">
+  <button id="btn-agregar" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:728px;padding:15px;border-radius:14px;border:none;background:#111;color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.2);z-index:50">
     + Agregar receta
   </button>`;
 }
